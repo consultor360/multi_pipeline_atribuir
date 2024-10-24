@@ -34,7 +34,7 @@ $is_admin = is_admin();
                                                 </a>
                                             </li>
                                         <?php } ?>
-                                    </ul>
+                                    </ul >
                                 </div>
                                 <?php if(has_permission('leads','','create')){ ?>
                                 <button type="button" class="btn btn-info" data-toggle="modal" data-target="#addLeadModal">
