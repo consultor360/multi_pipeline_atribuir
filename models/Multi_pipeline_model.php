@@ -732,4 +732,45 @@ public function update_lead_pipeline_stage($lead_id, $pipeline_id, $stage_id)
             'roles' => $roles
         ];
     }
+
+    public function get_pipelines_for_user($staff_id)
+{
+    $this->db->select('p.*');
+    $this->db->from('tblmulti_pipeline_pipelines p');
+    $this->db->join('tblmulti_pipeline_assignments a', 'p.id = a.pipeline_id', 'left');
+    $this->db->join('tblstaff s', 's.staffid = a.staff_id', 'left');
+    $this->db->join('tblroles r', 'r.roleid = a.role_id', 'left');
+    $this->db->where('(a.staff_id = ' . $staff_id . ' OR s.role = r.roleid)');
+    $this->db->group_by('p.id');
+    return $this->db->get()->result_array();
+}
+
+public function is_admin($staff_id)
+{
+    $this->db->where('staffid', $staff_id);
+    $staff = $this->db->get('tblstaff')->row();
+    return ($staff && $staff->admin == 1);
+}
+
+public function add_pipeline_assignment($pipeline_id, $staff_id = null, $role_id = null)
+{
+    $data = [
+        'pipeline_id' => $pipeline_id,
+        'staff_id' => $staff_id,
+        'role_id' => $role_id
+    ];
+    return $this->db->insert('tblmulti_pipeline_assignments', $data);
+}
+
+public function remove_pipeline_assignment($pipeline_id, $staff_id = null, $role_id = null)
+{
+    $this->db->where('pipeline_id', $pipeline_id);
+    if ($staff_id) {
+        $this->db->where('staff_id', $staff_id);
+    }
+    if ($role_id) {
+        $this->db->where('role_id', $role_id);
+    }
+    return $this->db->delete('tblmulti_pipeline_assignments');
+}
 }
