@@ -46,26 +46,15 @@ class Pipelines extends AdminController
 
     public function create()
     {
-        $this->load->model('staff_model');
-        $this->load->model('roles_model');
-    
         if ($this->input->post()) {
-            $post_data = $this->input->post();
-            $id = $this->multi_pipeline_model->add_pipeline($post_data);
+            $data = $this->input->post();
+            $id = $this->multi_pipeline_model->add_pipeline($data);
             if ($id) {
                 set_alert('success', _l('pipeline_added_successfully'));
                 redirect(admin_url('multi_pipeline/pipelines'));
-            } else {
-                set_alert('danger', _l('pipeline_add_failed'));
             }
         }
-    
         $data['title'] = _l('new_pipeline');
-        $data['staff'] = $this->db->get_where('tblstaff', ['active' => 1])->result_array();
-        $data['roles'] = $this->db->get('tblroles')->result_array();
-        $data['lead_statuses'] = $this->db->get('tblleads_status')->result_array();
-        $data['lead_sources'] = $this->db->get('tblleads_sources')->result_array();
-    
         $this->load->view('multi_pipeline/pipelines/create', $data);
     }
 
@@ -121,33 +110,6 @@ class Pipelines extends AdminController
     $data['title'] = _l('edit_pipeline');
     
     $this->load->view('multi_pipeline/pipelines/edit', $data);
-}
-
-public function assign($id)
-{
-    if (!has_permission('multi_pipeline', '', 'edit')) {
-        access_denied('multi_pipeline');
-    }
-
-    if ($this->input->post()) {
-        $staff_ids = $this->input->post('staff_ids');
-        $role_ids = $this->input->post('role_ids');
-
-        if ($this->pipeline_model->assign_pipeline($id, $staff_ids, $role_ids)) {
-            set_alert('success', _l('pipeline_assigned_successfully'));
-        } else {
-            set_alert('danger', _l('pipeline_assignment_failed'));
-        }
-
-        redirect(admin_url('multi_pipeline/pipelines'));
-    }
-
-    $data['pipeline'] = $this->pipeline_model->get($id);
-    $data['staff'] = $this->staff_model->get();
-    $data['roles'] = $this->roles_model->get();
-    $data['assignments'] = $this->multi_pipeline_model->get_pipeline_assignments($id);
-
-    $this->load->view('pipelines/assign', $data);
 }
     
 }

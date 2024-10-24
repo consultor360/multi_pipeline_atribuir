@@ -24,12 +24,14 @@ class Multi_pipeline extends AdminController
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('Multi_pipeline_model');
+        // Carregue o modelo corretamente
+        $this->load->model('multi_pipeline_model'); // O nome do modelo deve estar em minúsculas aqui para evitar problemas
         $this->load->library('form_validation');
         $this->load->model('Pipeline_model');
         $this->load->model('currencies_model');
-        $this->load->model('Lead_model'); // Adicionado
+        $this->load->model('Lead_model'); 
         $this->load->model('Api_model');
+        $this->load->model('Multi_pipeline_model');
     }
 
     /**
@@ -43,6 +45,8 @@ class Multi_pipeline extends AdminController
 
         $data['title'] = _l('multi_pipeline');
         $data['pipelines'] = $this->Multi_pipeline_model->get_pipelines();
+        $pipelines = $this->multi_pipeline_model->get_pipelines();
+        $data['pipelines'] = $pipelines;
         $data['summary'] = [];
         
 
@@ -129,15 +133,16 @@ class Multi_pipeline extends AdminController
         if (!has_permission('multi_pipeline', '', 'create')) {
             access_denied('create_pipeline');
         }
-
+    
         if ($this->input->post()) {
             $this->form_validation->set_rules('name', _l('pipeline_name'), 'required|max_length[255]|is_unique[' . db_prefix() . 'multi_pipeline_pipelines.name]');
             $this->form_validation->set_rules('description', _l('pipeline_description'), 'trim');
-
+    
             if ($this->form_validation->run() === TRUE) {
                 $data = $this->input->post();
                 $this->load->model('multi_pipeline_model');
-                $pipeline_id = $this->multi_pipeline_model->add_pipeline($data);
+                $pipeline_id = $this->multi_pipeline_model->add_pipeline($data); // Pipeline é criado e atribuições são feitas aqui
+    
                 if ($pipeline_id) {
                     log_activity('New Pipeline Created [ID: ' . $pipeline_id . ', Name: ' . $data['name'] . ']');
                     set_alert('success', _l('pipeline_created_successfully'));
@@ -147,7 +152,7 @@ class Multi_pipeline extends AdminController
                 }
             }
         }
-
+    
         $data['title'] = _l('create_pipeline');
         $this->load->view('multi_pipeline/pipelines/create', $data);
     }
