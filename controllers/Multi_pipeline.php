@@ -42,28 +42,34 @@ class Multi_pipeline extends AdminController
         if (!has_permission('multi_pipeline', '', 'view')) {
             access_denied('multi_pipeline');
         }
-
+    
         $data['title'] = _l('multi_pipeline');
-        $data['pipelines'] = $this->Multi_pipeline_model->get_pipelines();
-        $pipelines = $this->multi_pipeline_model->get_pipelines();
-        $data['pipelines'] = $pipelines;
+        $staff_id = get_staff_user_id();
+    
+        // Verifica se o usuário é administrador
+        if ($this->multi_pipeline_model->is_admin($staff_id)) {
+            $data['pipelines'] = $this->multi_pipeline_model->get_pipelines();
+        } else {
+            // Recupera apenas os pipelines atribuídos ao usuário ou à sua função
+            $data['pipelines'] = $this->multi_pipeline_model->get_pipelines_for_user($staff_id);
+        }
+    
         $data['summary'] = [];
-        
-
+    
         // Adicione os dados do pipeline nativo
         $this->load->model('Leads_model');
         $data['statuses'] = $this->Leads_model->get_status();
-
+    
         // Obtenha o resumo dos leads
         foreach ($data['statuses'] as $status) {
             $total_leads = total_rows(db_prefix() . 'leads', ['status' => $status['id']]);
-
+    
             // Calcular o valor total dos leads para este status
             $this->db->select_sum('lead_value');
             $this->db->where('status', $status['id']);
             $value_result = $this->db->get(db_prefix() . 'leads')->row();
             $total_value = $value_result ? $value_result->lead_value : 0;
-
+    
             $data['summary'][] = [
                 'pipeline_id' => 0, // 0 para o pipeline nativo
                 'status_id' => $status['id'],
@@ -73,19 +79,16 @@ class Multi_pipeline extends AdminController
                 'value' => $total_value
             ];
         }
-        
-        // Recuperar novamente os pipelines se necessário
-        $data['pipelines'] = $this->Multi_pipeline_model->get_pipelines();
-        $data['stages'] = $this->Multi_pipeline_model->get_stages();
-        
-        // Recuperar leads agrupados por pipeline e estágio
-        $data['leads'] = $this->Multi_pipeline_model->get_leads_grouped();
-        
+    
+        // Recuperar estágios e leads agrupados
+        $data['stages'] = $this->multi_pipeline_model->get_stages();
+        $data['leads'] = $this->multi_pipeline_model->get_leads_grouped();
+    
         $data['bodyclass'] = 'kan-ban-body';
         $this->load->model('currencies_model');
         $base_currency = $this->currencies_model->get_base_currency();
         $data['base_currency'] = $base_currency ? $base_currency : (object)['symbol' => '$'];
-
+    
         $this->load->view('pipelines/list', $data);
     }
 
