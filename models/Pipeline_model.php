@@ -142,46 +142,4 @@ class Pipeline_model extends App_Model
         $this->db->delete('tblmulti_pipeline_pipelines');
         return $this->db->affected_rows() > 0;
     }
-
-    public function assign_pipeline($pipeline_id, $staff_ids = [], $role_ids = [])
-    {
-        $this->db->trans_start();
-    
-        // Remover atribuições existentes
-        $this->db->where('pipeline_id', $pipeline_id);
-        $this->db->delete('tblmulti_pipeline_assignments');
-    
-        // Inserir novas atribuições para staff
-        foreach ($staff_ids as $staff_id) {
-            $this->db->insert('tblmulti_pipeline_assignments', [
-                'pipeline_id' => $pipeline_id,
-                'staff_id' => $staff_id
-            ]);
-        }
-    
-        // Inserir novas atribuições para roles
-        foreach ($role_ids as $role_id) {
-            $this->db->insert('tblmulti_pipeline_assignments', [
-                'pipeline_id' => $pipeline_id,
-                'role_id' => $role_id
-            ]);
-        }
-    
-        $this->db->trans_complete();
-    
-        return $this->db->trans_status();
-    }
-    
-    public function get_assigned_pipelines($staff_id)
-    {
-        $this->db->select('p.*');
-        $this->db->from('tblmulti_pipeline_pipelines p');
-        $this->db->join('tblmulti_pipeline_assignments a', 'p.id = a.pipeline_id', 'left');
-        $this->db->join('tblstaff s', 's.staffid = a.staff_id', 'left');
-        $this->db->join('tblroles r', 'r.roleid = a.role_id', 'left');
-        $this->db->where('(a.staff_id = ' . $staff_id . ' OR s.role = r.roleid OR a.staff_id IS NULL)');
-        $this->db->group_by('p.id');
-    
-        return $this->db->get()->result_array();
-    }
 }

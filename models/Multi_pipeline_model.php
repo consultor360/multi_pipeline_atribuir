@@ -36,20 +36,22 @@ class Multi_pipeline_model extends App_Model
  */
 public function get_pipelines($where = [], $limit = '', $start = '')
 {
+    // Seleciona todos os campos da tabela tblmulti_pipeline_pipelines
     $this->db->select('*');
-    $this->db->from('tblmulti_pipeline_pipelines');
+    $this->db->from('tblmulti_pipeline_pipelines');  // Corrigido: Não use o `get` imediatamente aqui
     
     // Aplicar filtros adicionais se fornecidos
     if (!empty($where)) {
         $this->db->where($where);
     }
-    
-    // Aplicar limitação se fornecido
+
+    // Aplicar limitação se fornecida
     if ($limit !== '') {
         $this->db->limit($limit, $start);
     }
-    
-    return $this->db->get()->result_array(); // Retorna um array para múltiplos registros
+
+    // Executa a consulta e retorna os resultados
+    return $this->db->get()->result_array();  // Correção: Chamar o `get()` apenas uma vez no final
 }
 
 /**
@@ -103,18 +105,6 @@ public function get_pipeline_leads($pipeline_id, $where = [])
 
     return $this->db->get()->result_array();
 }
-
-    /**
-     * Add a new pipeline
-     * 
-     * @param array $data
-     * @return int|bool The inserted ID on success, false on failure
-     */
-    public function add_pipeline($data)
-    {
-        $this->db->insert('tblmulti_pipeline_pipelines', $data);
-        return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
-    }
 
     /**
      * Update a pipeline
@@ -289,10 +279,37 @@ public function get_pipeline_leads($pipeline_id, $where = [])
  * @param array $data Dados do pipeline a ser adicionado
  * @return int ID do pipeline recém-inserido
  */
-public function add_pipelines($data)
-{
-    $this->db->insert('tblmulti_pipeline_pipelines', $data);
-    return $this->db->insert_id();
+public function add_pipeline($data) {
+    // Insira os dados básicos do pipeline
+    $pipeline_data = [
+        'name' => $data['name'],
+        'description' => $data['description']
+    ];
+
+    // Insere o pipeline na tabela 'tblmulti_pipeline_pipelines'
+    $this->db->insert('tblmulti_pipeline_pipelines', $pipeline_data);
+    $pipeline_id = $this->db->insert_id(); // Obtém o ID do pipeline criado
+
+    // Agora vamos associar os membros da equipe e funções à tabela 'tblmulti_pipeline_assignments'
+    if (isset($data['staff_ids']) && is_array($data['staff_ids'])) {
+        foreach ($data['staff_ids'] as $staff_id) {
+            $this->db->insert('tblmulti_pipeline_assignments', [
+                'pipeline_id' => $pipeline_id,
+                'staff_id' => $staff_id
+            ]);
+        }
+    }
+
+    if (isset($data['role_ids']) && is_array($data['role_ids'])) {
+        foreach ($data['role_ids'] as $role_id) {
+            $this->db->insert('tblmulti_pipeline_assignments', [
+                'pipeline_id' => $pipeline_id,
+                'role_id' => $role_id
+            ]);
+        }
+    }
+
+    return $pipeline_id;
 }
 
 /**
@@ -702,5 +719,17 @@ public function update_lead_pipeline_stage($lead_id, $pipeline_id, $stage_id)
     
     public function delete_assignment($id) {
         return $this->db->delete('tblmulti_pipeline_assignments', ['id' => $id]);
+    }
+
+    // Adicionar métodos para gerenciar as atribuições de pipelines
+
+    public function get_staff_and_roles() {
+        $staff = $this->db->get('tblstaff')->result_array();
+        $roles = $this->db->get('tblroles')->result_array();
+
+        return [
+            'staff' => $staff,
+            'roles' => $roles
+        ];
     }
 }
