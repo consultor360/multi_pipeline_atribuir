@@ -24,22 +24,26 @@ defined('BASEPATH') or exit('No direct script access allowed'); ?>
                         </div>
 
                         <!-- Adicionando os campos de seleção de membros e funções -->
-                        <div class="form-group">
-    <label for="assigned"><?php echo _l('assigned'); ?></label>
-    <select name="assigned" id="assigned" class="form-control selectpicker" data-live-search="true">
-        <option value=""><?php echo _l('none'); ?></option>
-        <?php foreach($staff as $member){ ?>
-            <option value="<?php echo $member['staffid']; ?>"><?php echo $member['firstname'] . ' ' . $member['lastname']; ?></option>
-        <?php } ?>
+                        <?php
+// Carregar membros da equipe e funções
+$staff_and_roles = $this->multi_pipeline_model->get_staff_and_roles();
+?>
+
+<div class="form-group">
+    <label for="staff_ids">Atribuir Pipeline a Usuarios</label>
+    <select name="staff_ids[]" class="form-control" multiple>
+        <?php foreach ($staff_and_roles['staff'] as $staff): ?>
+            <option value="<?php echo $staff['staffid']; ?>"><?php echo $staff['firstname'] . ' ' . $staff['lastname']; ?></option>
+        <?php endforeach; ?>
     </select>
 </div>
 
 <div class="form-group">
-    <label for="roles"><?php echo _l('roles'); ?></label>
-    <select name="roles[]" id="roles" class="form-control selectpicker" multiple data-live-search="true">
-        <?php foreach($roles as $role){ ?>
+    <label for="role_ids">Atribuir Pipeline a Funções</label>
+    <select name="role_ids[]" class="form-control" multiple>
+        <?php foreach ($staff_and_roles['roles'] as $role): ?>
             <option value="<?php echo $role['roleid']; ?>"><?php echo $role['name']; ?></option>
-        <?php } ?>
+        <?php endforeach; ?>
     </select>
 </div>
 

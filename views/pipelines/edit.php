@@ -23,22 +23,22 @@ defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
                         <!-- Adicionando os campos de seleção de membros e funções -->
                         <div class="form-group">
-                            <label for="staff_ids"><?php echo _l('assign_to_staff'); ?></label>
-                            <select name="staff_ids[]" id="staff_ids" class="selectpicker" multiple data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
-                                <?php foreach($staff as $member){ ?>
-                                    <option value="<?php echo $member['staffid']; ?>"><?php echo $member['firstname'] . ' ' . $member['lastname']; ?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
+    <label for="staff_ids">Atribuir a Membros da Equipe</label>
+    <select name="staff_ids[]" class="form-control" multiple>
+        <?php foreach ($staff_and_roles['staff'] as $staff): ?>
+            <option value="<?php echo $staff['staffid']; ?>"><?php echo $staff['firstname'] . ' ' . $staff['lastname']; ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>
 
-                        <div class="form-group">
-                            <label for="role_ids"><?php echo _l('assign_to_roles'); ?></label>
-                            <select name="role_ids[]" id="role_ids" class="selectpicker" multiple data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
-                                <?php foreach($roles as $role){ ?>
-                                    <option value="<?php echo $role['roleid']; ?>"><?php echo $role['name']; ?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
+<div class="form-group">
+    <label for="role_ids">Atribuir a Funções</label>
+    <select name="role_ids[]" class="form-control" multiple>
+        <?php foreach ($staff_and_roles['roles'] as $role): ?>
+            <option value="<?php echo $role['roleid']; ?>"><?php echo $role['name']; ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>
 
                         <button type="submit" class="btn btn-primary"><?php echo _l('submit'); ?></button>
                         <?php echo form_close(); ?>
