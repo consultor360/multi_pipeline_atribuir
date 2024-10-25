@@ -62,19 +62,45 @@ class Pipelines extends AdminController
     {
         if ($this->input->post()) {
             $data = $this->input->post();
+    
+            // Remover staff_ids e role_ids do array $data, pois eles não fazem parte da tabela tblmulti_pipeline_pipelines
+            unset($data['staff_ids'], $data['role_ids']);
+    
+            // Atualiza o pipeline (dados gerais, sem staff_ids e role_ids)
             $success = $this->multi_pipeline_model->update_pipeline($id, $data);
+    
+            // Atualiza as atribuições de membros e funções (remover e reatribuir)
+            $staff_ids = $this->input->post('staff_ids');
+            if ($staff_ids !== null && is_array($staff_ids)) {
+                $this->multi_pipeline_model->update_pipeline_assignments($id, $staff_ids, 'staff');
+            }
+    
+            $role_ids = $this->input->post('role_ids');
+            if ($role_ids !== null && is_array($role_ids)) {
+                $this->multi_pipeline_model->update_pipeline_assignments($id, $role_ids, 'role');
+            }
+    
             if ($success) {
                 set_alert('success', _l('pipeline_updated_successfully'));
                 redirect(admin_url('multi_pipeline/pipelines'));
+            } else {
+                set_alert('danger', _l('pipeline_update_failed'));
             }
         }
+    
+        // Carrega os dados do pipeline
         $data['pipeline'] = $this->multi_pipeline_model->get_pipeline($id);
         if (!$data['pipeline']) {
             show_404();
         }
+    
+        // Carrega as atribuições do pipeline
+        $data['pipeline_assignments'] = $this->multi_pipeline_model->get_pipeline_assignments($id);
         $data['title'] = _l('edit_pipeline');
+    
+        // Carrega a view de edição do pipeline
         $this->load->view('multi_pipeline/pipelines/edit', $data);
-    }
+    }  
 
     public function delete($id)
     {
