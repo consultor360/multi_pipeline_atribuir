@@ -169,24 +169,28 @@ public function get_pipeline_leads($pipeline_id, $where = [])
      * @param int $id ID do pipeline a ser excluído
      * @return bool Verdadeiro se excluído com sucesso, falso caso contrário
      */
-    public function delete_pipeline($id)
-    {
-        $this->db->trans_start();
-        
-        // Delete pipeline
-        $this->db->where('id', $id)->delete('tblmulti_pipeline_pipelines');
-        
-        // Delete associated stages
-        $this->db->where('pipeline_id', $id)->delete('tblmulti_pipeline_stages');
-        
-        // Update associated leads
-        $this->db->where('pipeline_id', $id)
-                 ->update('tblleads', ['pipeline_id' => null, 'stage_id' => null]);
-        
-        $this->db->trans_complete();
-        
-        return $this->db->trans_status();
-    }
+
+public function delete_pipeline($id)
+{
+    $this->db->trans_start();
+
+    // Excluir pipeline principal
+    $this->db->where('id', $id)->delete('tblmulti_pipeline_pipelines');
+    
+    // Excluir atribuições associadas na tabela tblmulti_pipeline_assignments
+    $this->db->where('pipeline_id', $id)->delete('tblmulti_pipeline_assignments');
+
+    // Excluir estágios associados
+    $this->db->where('pipeline_id', $id)->delete('tblmulti_pipeline_stages');
+    
+    // Atualizar leads associados, removendo referências ao pipeline e estágio
+    $this->db->where('pipeline_id', $id)
+             ->update('tblleads', ['pipeline_id' => null, 'stage_id' => null]);
+    
+    $this->db->trans_complete();
+
+    return $this->db->trans_status();
+}
 
     /**
      * Atualiza o estágio de um lead
