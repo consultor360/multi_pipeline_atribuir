@@ -734,16 +734,28 @@ public function update_lead_pipeline_stage($lead_id, $pipeline_id, $stage_id)
     }
 
     public function get_pipelines_for_user($staff_id)
-{
-    $this->db->select('p.*');
-    $this->db->from('tblmulti_pipeline_pipelines p');
-    $this->db->join('tblmulti_pipeline_assignments a', 'p.id = a.pipeline_id', 'left');
-    $this->db->join('tblstaff s', 's.staffid = a.staff_id', 'left');
-    $this->db->join('tblroles r', 'r.roleid = a.role_id', 'left');
-    $this->db->where('(a.staff_id = ' . $staff_id . ' OR s.role = r.roleid)');
-    $this->db->group_by('p.id');
-    return $this->db->get()->result_array();
-}
+    {
+        // Obtém o ID da função (role_id) do usuário logado
+        $this->db->select('role');
+        $this->db->from('tblstaff');
+        $this->db->where('staffid', $staff_id);
+        $user_role = $this->db->get()->row();
+        $role_id = $user_role ? $user_role->role : null;
+    
+        // Consulta para obter pipelines baseados em staff_id ou role_id
+        $this->db->select('p.*');
+        $this->db->from('tblmulti_pipeline_pipelines p');
+        $this->db->join('tblmulti_pipeline_assignments a', 'p.id = a.pipeline_id', 'inner');
+        $this->db->group_start();
+        $this->db->where('a.staff_id', $staff_id); // Verifica atribuição por staff_id
+        if ($role_id) {
+            $this->db->or_where('a.role_id', $role_id); // Verifica atribuição por role_id
+        }
+        $this->db->group_end();
+        $this->db->group_by('p.id');
+        
+        return $this->db->get()->result_array();
+    }
 
 public function is_admin($staff_id)
 {
