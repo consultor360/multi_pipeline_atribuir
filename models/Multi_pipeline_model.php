@@ -120,6 +120,50 @@ public function get_pipeline_leads($pipeline_id, $where = [])
         return $this->db->affected_rows() > 0;
     }
 
+    public function update_pipeline_assignments($pipeline_id, $ids, $type)
+    {
+        // Remove as atribuições antigas
+        if ($type == 'staff') {
+            $this->db->where('pipeline_id', $pipeline_id);
+            $this->db->where('staff_id IS NOT NULL');
+            $this->db->delete('tblmulti_pipeline_assignments');
+    
+            // Adiciona as novas atribuições de staff
+            foreach ($ids as $staff_id) {
+                $this->db->insert('tblmulti_pipeline_assignments', [
+                    'pipeline_id' => $pipeline_id,
+                    'staff_id' => $staff_id
+                ]);
+            }
+        } elseif ($type == 'role') {
+            $this->db->where('pipeline_id', $pipeline_id);
+            $this->db->where('role_id IS NOT NULL');
+            $this->db->delete('tblmulti_pipeline_assignments');
+    
+            // Adiciona as novas atribuições de roles
+            foreach ($ids as $role_id) {
+                $this->db->insert('tblmulti_pipeline_assignments', [
+                    'pipeline_id' => $pipeline_id,
+                    'role_id' => $role_id
+                ]);
+            }
+        }
+    }    
+
+    public function get_pipeline_assignments($pipeline_id)
+{
+    // Recupera atribuições de membros e funções
+    $this->db->select('staff_id, role_id');
+    $this->db->where('pipeline_id', $pipeline_id);
+    $assignments = $this->db->get('tblmulti_pipeline_assignments')->result_array();
+
+    $staff = array_filter($assignments, fn($assignment) => $assignment['staff_id']);
+    $roles = array_filter($assignments, fn($assignment) => $assignment['role_id']);
+
+    return ['staff' => $staff, 'roles' => $roles];
+    return $this->db->get('tblmulti_pipeline_assignments')->result_array();
+}
+
     /**
      * Exclui um pipeline e lida com dados relacionados
      * @param int $id ID do pipeline a ser excluído
@@ -709,12 +753,6 @@ public function update_lead_pipeline_stage($lead_id, $pipeline_id, $stage_id)
             ];
         }
         return $result;
-    }
-
-    public function get_pipeline_assignments($pipeline_id)
-    {
-        $this->db->where('pipeline_id', $pipeline_id);
-        return $this->db->get('tblmulti_pipeline_assignments')->result_array();
     }
     
     public function delete_assignment($id) {
