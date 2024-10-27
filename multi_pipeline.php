@@ -157,4 +157,8 @@ function multi_pipeline_permissions() {
     register_staff_capabilities('multi_pipeline', $capabilities, _l('multi_pipeline'));
 }
 
+hooks()->add_action('app_init', function () {
+    require_once(__DIR__ . '/hooks/multi_pipeline_hooks.php');
+});
+
 // Nota: A chamada direta para init_multi_pipeline() foi removida para evitar problemas de segurança
